@@ -19,6 +19,9 @@ namespace Turrets
 		private bool aiming = false;
 		private Vector3 aimPoint;
 
+		private float curTraverse = 0.0f;
+		private float curElevation = 0.0f;
+
 		const int kBenchmarkIter = 500;
 
 		// Use this for initialization
@@ -57,6 +60,8 @@ namespace Turrets
 
 		private void RotateTurret()
 		{
+			//RotateBaseAngle();
+			//RotateBarrelsAngle();
 			RotateBaseLegacy();
 			RotateBarrelsLegacy();
 		}
@@ -112,7 +117,53 @@ namespace Turrets
 		{
 			if (turretBase != null)
 			{
-				//Vector3.SignedAngle();
+				// Rotate around the yaw axis of the parent.
+				float angleDiff = Vector3.SignedAngle(turretBase.forward, aimPoint - turretBase.position, transform.up);
+
+				//curTraverse = Mathf.MoveTowards(curTraverse, curTraverse + angleDiff, turnRate * Time.deltaTime);
+
+				if (Mathf.Sign(angleDiff) > 0.0f)
+				{
+					curTraverse += turnRate * Time.deltaTime;
+				}
+				else
+				{
+					curTraverse -= turnRate * Time.deltaTime;
+				}
+
+				// Traverse limits.
+				curTraverse = Mathf.Clamp(curTraverse, -traverse, traverse);
+
+				Vector3 baseEulers = turretBase.localEulerAngles;
+				baseEulers.y = curTraverse;
+				turretBase.localEulerAngles = baseEulers;
+			}
+		}
+
+		private void RotateBarrelsAngle()
+		{
+			if (turretBase != null && turretBarrels != null)
+			{
+				// Rotate around the pitch axis of the base.
+				float angleDiff = Vector3.SignedAngle(turretBarrels.forward, aimPoint - turretBarrels.position, turretBase.right);
+
+				//curElevation = Mathf.MoveTowards(curElevation, curElevation + angleDiff, turnRate * Time.deltaTime);
+
+				if (Mathf.Sign(angleDiff) > 0.0f)
+				{
+					curElevation += turnRate * Time.deltaTime;
+				}
+				else
+				{
+					curElevation -= turnRate * Time.deltaTime;
+				}
+
+				// Elevation limits.
+				curElevation = Mathf.Clamp(curElevation, -elevation, depression);
+
+				Vector3 baseEulers = turretBarrels.localEulerAngles;
+				baseEulers.x = curElevation;
+				turretBarrels.localEulerAngles = baseEulers;
 			}
 		}
 
